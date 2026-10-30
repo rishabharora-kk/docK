@@ -1,9 +1,27 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>docK — Pick up. Move aside. Put down.</title>
-<meta name="description" content="A tactile, accessible dock. Drag to reorder, lift to remove, undo to restore. Try it instantly — no install or sign-in.">
+<title>docK — Draggable Dock Animation for AI Coding Assistants</title>
+<meta name="description" content="Try a draggable dock with spring animation, reorder, remove and undo. Give the repo link to your AI assistant to build it from the spec. MIT licensed.">
 <meta name="theme-color" content="#eee8dc">
+<link rel="canonical" href="https://rishabharora-kk.github.io/docK/">
+<link rel="icon" href="https://rishabharora-kk.github.io/docK/assets/favicon.svg" type="image/svg+xml">
+<link rel="sitemap" type="application/xml" href="https://rishabharora-kk.github.io/docK/sitemap.xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="docK">
+<meta property="og:title" content="docK — Try the dock. Give your AI the link.">
+<meta property="og:description" content="Draggable icons. Spring animation. Remove and undo. A live reference, motion spec, and optional MCP server for your AI coding assistant.">
+<meta property="og:url" content="https://rishabharora-kk.github.io/docK/">
+<meta property="og:image" content="https://rishabharora-kk.github.io/docK/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="docK: Try the dock. Give your AI the link. Draggable dock with spring motion, reorder, remove and undo.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="docK — Try the dock. Give your AI the link.">
+<meta name="twitter:description" content="A draggable dock your AI assistant can build from a spec. Live demo, reference code, optional MCP. MIT licensed.">
+<meta name="twitter:image" content="https://rishabharora-kk.github.io/docK/assets/social-preview.png">
+<meta name="twitter:image:alt" content="docK dock interaction and AI handoff">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareSourceCode", "@id": "https://rishabharora-kk.github.io/docK/#source", "name": "docK", "description": "Try a draggable dock with spring animation, reorder, remove and undo. Give the repo link to your AI assistant to build it from the spec. MIT licensed.", "url": "https://rishabharora-kk.github.io/docK/", "codeRepository": "https://github.com/rishabharora-kk/docK", "license": "https://opensource.org/license/mit", "programmingLanguage": ["HTML", "JavaScript", "Python"], "runtimePlatform": "Web browser; Python for optional MCP server", "author": {"@type": "Person", "name": "rishabharora-kk", "url": "https://github.com/rishabharora-kk"}, "isAccessibleForFree": true}</script>
 <style>
 :root{--bg:#eee8dc;--stage:#e4dccb;--ink:#201d19;--mut:#696255;--line:#cfc5b1;--acc:#c4623f;--dock:rgba(250,246,238,.66);--rim:rgba(32,29,25,.12);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171512;--stage:#201d19;--ink:#efe9de;--mut:#9b9487;--line:#3a352d;--acc:#e0805c;--dock:rgba(52,47,41,.62);--rim:rgba(255,255,255,.12)}}
@@ -41,18 +59,20 @@ dt{color:var(--mut)}dd{margin:0}
 ol,ul{padding-left:20px;margin:0;max-width:66ch}li{margin:0 0 9px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (max-width:560px){dl{grid-template-columns:1fr;gap:2px}dd{margin-bottom:10px}}
-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:42px;font-size:12px;color:var(--mut)}a{color:inherit;text-underline-offset:4px}nav a{font-weight:750;font-size:22px;text-decoration:none;color:var(--ink)}nav a span{color:var(--acc)}summary{cursor:pointer;padding:22px 0;font-weight:600}summary span{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-left:18px}details{margin-top:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}details[open]{padding-bottom:28px}details h2{margin-top:24px}footer{margin-top:28px;font-size:13px;color:var(--mut)}#dock{transform:translateX(-50%) scale(var(--dock-scale,1));transform-origin:50% 100%}.it{border:0;padding:0;background:none}.ic svg{pointer-events:none}#toast{white-space:nowrap;z-index:30}.hint{padding:0 12px} @media(max-width:440px){main{padding:24px 16px 48px}nav{margin-bottom:30px}nav span{font-size:11px}#stage{height:310px;border-radius:20px}.bar{gap:10px}.bar button{padding:7px 12px}}@media(prefers-reduced-motion:reduce){*,*:before{transition:none!important}}
+.eyebrow{font-size:12px;color:var(--acc);font-weight:600;letter-spacing:.03em}nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:42px;font-size:12px;color:var(--mut)}a{color:inherit;text-underline-offset:4px}nav a{font-weight:750;font-size:22px;text-decoration:none;color:var(--ink)}nav a span{color:var(--acc)}summary{cursor:pointer;padding:22px 0;font-weight:600}summary span{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-left:18px}details{margin-top:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}details[open]{padding-bottom:28px}details h2{margin-top:24px}footer{margin-top:28px;font-size:13px;color:var(--mut)}#dock{transform:translateX(-50%) scale(var(--dock-scale,1));transform-origin:50% 100%}.it{border:0;padding:0;background:none}.ic svg{pointer-events:none}#toast{white-space:nowrap;z-index:30}.hint{padding:0 12px} @media(max-width:440px){main{padding:24px 16px 48px}nav{margin-bottom:30px}nav span{font-size:11px}#stage{height:310px;border-radius:20px}.bar{gap:10px}.bar button{padding:7px 12px}}@media(prefers-reduced-motion:reduce){*,*:before{transition:none!important}}
 </style></head><body><main>
 <nav aria-label="Project"><a href="https://github.com/rishabharora-kk/docK">docK <span aria-hidden="true">↗</span></a><span>Vanilla JS · No dependencies</span></nav>
-<h1>Pick up. Move aside. Put down.</h1>
-<p class="mut" id="instructions">Drag sideways to reorder. Drag up to remove. Undo brings it back. <span class="sr">Keyboard: Space to pick up, arrows to move, Space to drop. Escape cancels. Delete removes.</span></p>
+<p class="eyebrow">Draggable dock · Spring animation · AI-ready spec</p>
+<h1>Try the dock. Give your AI the link.</h1>
+<p class="mut" id="instructions">Pick up an icon. Drag sideways to reorder. Drag up to remove. Undo brings it back. <span class="sr">Keyboard: Space to pick up, arrows to move, Space to drop. Escape cancels. Delete removes.</span></p>
 <div class="bar"><button class="t" id="theme" aria-pressed="false">Dark mode</button><label><input type="checkbox" id="slow"> Slow motion</label><button class="t" id="reset">Reset dock</button></div>
+<noscript><p>This interactive demo needs JavaScript. You can still read the <a href="guide/">integration guide</a> and <a href="https://github.com/rishabharora-kk/docK">download the source</a>.</p></noscript>
 <div id="stage" role="group" aria-label="Interactive dock playground" aria-describedby="instructions"><div class="hint">Try it. Drag an icon.</div>
 <div id="dock"><div class="slot" id="slot"></div></div><div id="tip"></div>
 <div id="toast"></div></div>
 <div id="rd" aria-hidden="true"></div><div class="sr" id="live" aria-live="polite"></div>
 
-<section aria-labelledby="get-dock" style="margin-top:28px"><h2 id="get-dock" style="margin-top:0">Want this in your project?</h2><p class="mut">Give this repo link to your AI assistant. The implementation guide, motion spec, reference code, and optional MCP server explain how to build it.</p><p><a href="https://github.com/rishabharora-kk/docK">github.com/rishabharora-kk/docK</a></p><button class="t" id="copy-prompt">Copy prompt for your AI</button><p id="copy-status" role="status" style="font-size:13px;margin-top:8px"></p></section>
+<section aria-labelledby="get-dock" style="margin-top:28px"><h2 id="get-dock" style="margin-top:0">Want this in your project?</h2><p class="mut">Give this repo link to your AI assistant. The implementation guide, motion spec, reference code, and optional MCP server explain how to build it.</p><p><a href="https://github.com/rishabharora-kk/docK">github.com/rishabharora-kk/docK</a></p><p class="mut" style="font-size:14px">No MCP setup needed to read the files. <a href="guide/">Read the AI integration guide →</a></p><button class="t" id="copy-prompt">Copy prompt for your AI</button><p id="copy-status" role="status" style="font-size:13px;margin-top:8px"></p></section>
 <details><summary>Explore the interaction design <span>States, motion tokens & edge cases</span></summary>
 <h2>State machine</h2>
 <p class="mut">Seven states, one active at a time. Every path ends in Idle, so the dock can never get stuck.</p>
@@ -90,7 +110,7 @@ nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margi
 <li>Reduced motion: springs become near-instant, tilt is off, hierarchy and states stay identical.</li>
 <li>Screen readers: each step is announced with position, for example “Picked up Notes, position 3 of 6”.</li>
 </ul>
-</details><footer>Built for curious hands. <a href="https://github.com/rishabharora-kk/docK">View source on GitHub ↗</a></footer>
+</details><footer>MIT licensed. <a href="guide/">Integration guide</a> · <a href="https://github.com/rishabharora-kk/docK">View source on GitHub ↗</a></footer>
 </main>
 <script>
 document.querySelector('#copy-prompt').onclick=async()=>{const prompt="Add this dock interaction to my project: https://github.com/rishabharora-kk/docK\nRead IMPLEMENTATION.md, spec.json, and index.html. Adapt it to my stack and design, preserve pointer and keyboard behaviour, and verify the interaction scenarios. Use my app's icons and actions.";try{await navigator.clipboard.writeText(prompt);document.querySelector('#copy-status').textContent='Copied. Paste it into your AI coding assistant.'}catch{document.querySelector('#copy-status').textContent=prompt}};

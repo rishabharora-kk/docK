@@ -1,0 +1,22 @@
+# docK
+
+> A draggable dock interaction with spring animation, keyboard controls, removal and undo. Give the repository URL to an AI coding assistant to adapt the reference to a project. MIT licensed.
+
+## Start here
+
+- [Repository](https://github.com/rishabharora-kk/docK): project overview and AI handoff prompt.
+- [Live demo](https://rishabharora-kk.github.io/docK/): try the interaction.
+- [Integration guide](https://rishabharora-kk.github.io/docK/guide/): file-based and optional MCP workflows.
+
+## Implementation files
+
+- [Implementation instructions](https://raw.githubusercontent.com/rishabharora-kk/docK/main/IMPLEMENTATION.md)
+- [Machine-readable specification](https://raw.githubusercontent.com/rishabharora-kk/docK/main/spec.json)
+- [Runnable HTML reference](https://raw.githubusercontent.com/rishabharora-kk/docK/main/index.html)
+- [Optional local stdio MCP server](https://raw.githubusercontent.com/rishabharora-kk/docK/main/server.py)
+- [UX review and limitations](https://raw.githubusercontent.com/rishabharora-kk/docK/main/UX-REVIEW.md)
+- [MIT license](https://raw.githubusercontent.com/rishabharora-kk/docK/main/LICENSE)
+
+## Scope
+
+The demo uses HTML and vanilla JavaScript with no browser dependencies. Framework build plans are guidance, not published React, Vue, Svelte or SwiftUI packages. The MCP server must be configured in the client; a URL does not connect it automatically. Static source checks are heuristic, not a substitute for interaction testing. llms.txt is an optional reading aid, not an indexing or ranking guarantee.
