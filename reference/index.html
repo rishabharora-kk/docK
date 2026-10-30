@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>docK — Pick up. Move aside. Put down.</title>
+<meta name="description" content="A tactile, accessible dock. Drag to reorder, lift to remove, undo to restore. Try it instantly — no install or sign-in.">
+<meta name="theme-color" content="#eee8dc">
+<style>
+:root{--bg:#eee8dc;--stage:#e4dccb;--ink:#201d19;--mut:#696255;--line:#cfc5b1;--acc:#c4623f;--dock:rgba(250,246,238,.66);--rim:rgba(32,29,25,.12);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171512;--stage:#201d19;--ink:#efe9de;--mut:#9b9487;--line:#3a352d;--acc:#e0805c;--dock:rgba(52,47,41,.62);--rim:rgba(255,255,255,.12)}}
+:root[data-theme="dark"]{--bg:#171512;--stage:#201d19;--ink:#efe9de;--mut:#9b9487;--line:#3a352d;--acc:#e0805c;--dock:rgba(52,47,41,.62);--rim:rgba(255,255,255,.12)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:40px 20px 72px}
+h1{font:500 clamp(30px,5vw,44px)/1.1 "Iowan Old Style",Palatino,Georgia,serif;margin:0 0 10px;letter-spacing:-.01em}
+h2{font:500 22px/1.2 "Iowan Old Style",Palatino,Georgia,serif;margin:48px 0 12px}
+p{margin:0 0 12px;max-width:62ch}.mut{color:var(--mut)}
+.bar{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:18px 0 12px;font-size:14px;color:var(--mut)}
+.bar label{display:flex;gap:7px;align-items:center;cursor:pointer}
+button.t{font:inherit;color:var(--ink);background:none;border:1px solid var(--line);border-radius:999px;padding:5px 14px;cursor:pointer}
+button:focus-visible,.it:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+#stage{position:relative;height:340px;background:var(--stage);border-radius:28px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#stage:before{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.18),transparent 60%)}
+#dock{position:absolute;left:50%;bottom:30px;height:76px;transform:translateX(-50%);border-radius:26px;background:var(--dock);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:inset 0 0 0 1px var(--rim),0 18px 40px rgba(0,0,0,.14)}
+.it{position:absolute;left:12px;top:12px;width:52px;height:52px;border-radius:24%;touch-action:none;cursor:grab;will-change:transform;-webkit-tap-highlight-color:transparent}
+.ic{width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;background-image:linear-gradient(160deg,rgba(255,255,255,.24),rgba(0,0,0,.1))}
+.ic svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.slot{position:absolute;left:12px;top:12px;width:52px;height:52px;border-radius:24%;border:1.5px dashed var(--mut);opacity:0;pointer-events:none}
+#tip{position:absolute;left:0;top:0;padding:4px 10px;font-size:13px;border-radius:999px;background:var(--ink);color:var(--bg);white-space:nowrap;opacity:0;transition:opacity .14s;pointer-events:none}
+#toast{position:absolute;left:50%;top:18px;transform:translate(-50%,-8px);opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;font-size:14px;background:var(--dock);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--rim);border-radius:999px;padding:6px 8px 6px 16px;display:flex;gap:10px;align-items:center}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{font:inherit;border:0;background:var(--ink);color:var(--bg);border-radius:999px;padding:3px 12px;cursor:pointer}
+.hint{position:absolute;left:0;right:0;top:56px;text-align:center;font-size:14px;color:var(--mut)}
+#rd{font-size:14px;color:var(--mut);margin-top:12px;min-height:22px}
+svg.dg{width:100%;height:auto;display:block;margin-top:8px}
+.nd rect{fill:var(--bg);stroke:var(--line);stroke-width:1;transition:fill .12s,stroke .12s}
+.nd text{font-size:12px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.nd.on rect{fill:var(--acc);stroke:var(--acc)}.nd.on text{fill:#fff}
+.ed{stroke:var(--mut);stroke-width:1.2;fill:none}.lb{font-size:10.5px;fill:var(--mut);text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:5px}
+dl{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:9px 20px;margin:0;font-size:15px}
+dt{color:var(--mut)}dd{margin:0}
+ol,ul{padding-left:20px;margin:0;max-width:66ch}li{margin:0 0 9px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:560px){dl{grid-template-columns:1fr;gap:2px}dd{margin-bottom:10px}}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:42px;font-size:12px;color:var(--mut)}a{color:inherit;text-underline-offset:4px}nav a{font-weight:750;font-size:22px;text-decoration:none;color:var(--ink)}nav a span{color:var(--acc)}summary{cursor:pointer;padding:22px 0;font-weight:600}summary span{display:block;font-weight:400;font-size:13px;color:var(--mut);margin-left:18px}details{margin-top:32px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}details[open]{padding-bottom:28px}details h2{margin-top:24px}footer{margin-top:28px;font-size:13px;color:var(--mut)}#dock{transform:translateX(-50%) scale(var(--dock-scale,1));transform-origin:50% 100%}.it{border:0;padding:0;background:none}.ic svg{pointer-events:none}#toast{white-space:nowrap;z-index:30}.hint{padding:0 12px} @media(max-width:440px){main{padding:24px 16px 48px}nav{margin-bottom:30px}nav span{font-size:11px}#stage{height:310px;border-radius:20px}.bar{gap:10px}.bar button{padding:7px 12px}}@media(prefers-reduced-motion:reduce){*,*:before{transition:none!important}}
+</style></head><body><main>
+<nav aria-label="Project"><a href="https://github.com/rishabharora-kk/docK">docK <span aria-hidden="true">↗</span></a><span>Vanilla JS · No dependencies</span></nav>
+<h1>Pick up. Move aside. Put down.</h1>
+<p class="mut" id="instructions">Drag sideways to reorder. Drag up to remove. Undo brings it back. <span class="sr">Keyboard: Space to pick up, arrows to move, Space to drop. Escape cancels. Delete removes.</span></p>
+<div class="bar"><button class="t" id="theme" aria-pressed="false">Dark mode</button><label><input type="checkbox" id="slow"> Slow motion</label><button class="t" id="reset">Reset dock</button></div>
+<div id="stage" role="group" aria-label="Interactive dock playground" aria-describedby="instructions"><div class="hint">Try it. Drag an icon.</div>
+<div id="dock"><div class="slot" id="slot"></div></div><div id="tip"></div>
+<div id="toast"></div></div>
+<div id="rd" aria-hidden="true"></div><div class="sr" id="live" aria-live="polite"></div>
+
+<details><summary>Explore the interaction design <span>States, motion tokens & edge cases</span></summary>
+<h2>State machine</h2>
+<p class="mut">Seven states, one active at a time. Every path ends in Idle, so the dock can never get stuck.</p>
+<svg class="dg" id="dg" viewBox="0 0 640 190" role="img" aria-label="State diagram of the dock: idle, armed, reorder, remove intent, dropping, removing, returning"><defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L8 4L0 8z" fill="var(--mut)"/></marker></defs></svg>
+
+<h2>Why it feels right</h2>
+<ol>
+<li>The icon is glued to the pointer. Position has zero lag, so the hand always trusts it. All personality lives in scale, tilt and shadow.</li>
+<li>Everything else is a spring. On release, the pointer’s velocity carries into the settle, so the drop continues the gesture instead of starting a new animation.</li>
+<li>Space opens before it’s asked for. Neighbours part early and a faint outline shows where the icon will land.</li>
+<li>Removal is shown by losing weight (smaller, lighter), never by red or alarms. It is always undoable.</li>
+<li>One gesture, one meaning. Keyboard, Esc, touch cancel and reduced motion are first-class paths, not add-ons.</li>
+</ol>
+
+<h2>Motion tokens</h2>
+<dl>
+<dt>Press</dt><dd>Scale 0.92, spring 300/26. Acknowledges contact immediately.</dd>
+<dt>Arm to lift</dt><dd>130 ms hold, or 6 px of movement, whichever comes first. Mouse users who just drag never wait.</dd>
+<dt>Lift</dt><dd>Scale 1.14, rises 6 px, shadow deepens, spring 600/36. A short haptic tick on touch devices.</dd>
+<dt>Tilt</dt><dd>0.012 degrees per px/s of horizontal speed, capped at 10 degrees. Fast hands give a looser icon.</dd>
+<dt>Reorder</dt><dd>Swap only when the icon passes 0.62 of a slot, so slots never flicker at boundaries. Neighbours spring 520/34.</dd>
+<dt>Remove intent</dt><dd>52 px above the dock to enter, 28 px to leave. Scale 0.82, opacity 0.72, gap closes, label says “Release to remove”.</dd>
+<dt>Drop and settle</dt><dd>Spring 520/34 (damping ratio about 0.75): one small overshoot, then rest.</dd>
+<dt>Dock width</dt><dd>Spring 300/30, always centred, so the dock breathes instead of jumping.</dd>
+<dt>Undo</dt><dd>Four seconds, or Ctrl/Cmd+Z. The icon returns to its original slot.</dd>
+</dl>
+
+<h2>Edge cases handled</h2>
+<ul>
+<li>Tap without lifting: the icon hops once (launch feedback) and nothing reorders.</li>
+<li>Grab an icon mid-settle: allowed. Springs keep their velocity, so the hand-off is continuous.</li>
+<li>Second finger or second pointer during a drag: ignored.</li>
+<li>Touch cancelled, window loses focus, or Esc: the icon returns to its original slot.</li>
+<li>Dragged far below or to the sides of the dock: it follows with rubber-band resistance and the order still resolves from its centre.</li>
+<li>Reduced motion: springs become near-instant, tilt is off, hierarchy and states stay identical.</li>
+<li>Screen readers: each step is announced with position, for example “Picked up Notes, position 3 of 6”.</li>
+</ul>
+</details><footer>Built for curious hands. <a href="https://github.com/rishabharora-kk/docK">View source on GitHub ↗</a></footer>
+</main>
+<script>
+const $=s=>document.querySelector(s),PITCH=64,SZ=52,GAP=12;
+const stage=$('#stage'),dock=$('#dock'),tip=$('#tip'),live=$('#live'),toast=$('#toast'),slotEl=$('#slot');
+const G=['<path d="M5 6h14v9H10l-4 3v-3H5z"/>','<path d="M7 4h7l3 3v13H7zM14 4v3h3M9.5 12h5M9.5 15h5"/>','<path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/>','<circle cx="11" cy="11" r="5"/><path d="M15 15l4 4"/>','<path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h3"/>','<circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.3 6.3l2.1 2.1M15.6 15.6l2.1 2.1M17.7 6.3l-2.1 2.1M8.4 15.6l-2.1 2.1"/>'];
+const NM=['Chat','Docs','Code','Search','Notes','Settings'],CL=['#c4623f','#3b3733','#7a9a82','#c29a55','#85699a','#5f86ad'];
+let dockScale=1;
+function fitDock(){dockScale=Math.min(1,(stage.clientWidth-24)/396);dock.style.setProperty('--dock-scale',dockScale)}
+fitDock();new ResizeObserver(fitDock).observe(stage);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,K=reduce?2400:520,C=reduce?100:34;
+let all=[],order=[],held=null,armed=null,st='idle',insertIdx=0,origIdx=0,px=0,py=0,gx=0,gy=0,pvx=0,lastpx=0,TS=1,hoverX=null,activePointer=null,holdT=0,dX=0,dY=0,removed=[],toastT=0,last=0,slotS={x:0,vx:0,o:0,vo:0},dockS={w:6*PITCH-GAP,vw:0};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),haptic=m=>{try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}};
+function sp(o,k,tg,Kk,Cc,dt){if(reduce){o[k]=tg;o['v'+k]=0;return;}const v='v'+k,n=Math.ceil(dt/.008)||1,h=dt/n;for(let i=0;i<n;i++){o[v]+=(Kk*(tg-o[k])-Cc*o[v])*h;o[k]+=o[v]*h}}
+const announce=m=>{live.textContent=m};
+function setState(s){st=s;document.querySelectorAll('.nd').forEach(n=>n.classList.toggle('on',n.id==='n-'+s));rd()}
+function rd(){const t={idle:'Idle',armed:'Armed: press registered',reorder:'Reorder: slot '+(insertIdx+1)+' of '+order.length,intent:'Remove intent: release to remove',dropping:'Dropping',removing:'Removing',returning:'Returning to original slot'};$('#rd').textContent='State: '+t[st]}
+all=NM.map((n,i)=>{const el=document.createElement('button');el.type='button';el.className='it';el.tabIndex=0;el.setAttribute('aria-describedby','instructions');el.setAttribute('aria-label',n);
+el.innerHTML='<div class="ic" style="background-color:'+CL[i]+'"><svg viewBox="0 0 24 24">'+G[i]+'</svg></div>';dock.appendChild(el);
+return {el,name:n,x:i*PITCH,vx:0,y:0,vy:0,s:1,vs:0,r:0,vr:0,sh:0,vsh:0,op:1,vop:0,settling:false,removing:false,kb:false,ri:0}});
+order=all.slice();
+function lift(o,kb){clearTimeout(holdT);held=o;o.kb=kb;o.settling=false;origIdx=insertIdx=order.indexOf(o);
+const dr=dock.getBoundingClientRect();if(!kb){gx=(px-dr.left)/dockScale-12-o.x-SZ/2}setState('reorder');haptic(10);announce('Picked up '+o.name+', position '+(origIdx+1)+' of '+order.length+(kb?'. Left and right arrows move, Space drops, Escape cancels.':''))}
+function syncOrder(){const focused=document.activeElement;order.forEach((o,i)=>{dock.appendChild(o.el);o.el.setAttribute('aria-label',o.name+', position '+(i+1)+' of '+order.length)});all.forEach(o=>{o.el.tabIndex=order.includes(o)?0:-1});if(order.some(o=>o.el===focused))focused.focus({preventScroll:true})}
+function finish(o,s,msg){activePointer=null;syncOrder();o.settling=true;o.kb=false;held=null;armed=null;setState(s);haptic(6);announce(msg)}
+function drop(o){const ot=order.filter(x=>x!==o);ot.splice(insertIdx,0,o);order=ot;finish(o,'dropping','Dropped '+o.name+' at position '+(insertIdx+1)+' of '+order.length)}
+function cancel(){clearTimeout(holdT);activePointer=null;if(held){finish(held,'returning','Cancelled. '+held.name+' returned to position '+(origIdx+1))}else if(armed){armed=null;setState('idle')}}
+function remove(o){order=order.filter(x=>x!==o);activePointer=null;syncOrder();if(document.activeElement===o.el)(order[Math.min(origIdx,order.length-1)]?.el||$('#reset')).focus();o.removing=true;o.settling=false;o.kb=false;o.ri=origIdx;removed.push(o);held=null;armed=null;setState('removing');haptic(8);announce('Removed '+o.name+'. Press Control Z to undo.');
+toast.innerHTML='Removed '+o.name+' <button id="ud">Undo</button>';toast.classList.add('on');$('#ud').onclick=undo;clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('on'),4000)}
+function undo(){if(held||armed)return;const o=removed.pop();if(!o)return;o.removing=false;o.el.style.display='';order.splice(Math.min(o.ri,order.length),0,o);o.x=order.indexOf(o)*PITCH;o.vx=0;o.s=.5;o.op=0;o.settling=true;syncOrder();o.el.focus();toast.classList.remove('on');announce('Restored '+o.name)}
+function reset(){clearTimeout(holdT);clearTimeout(toastT);activePointer=null;removed=[];order=all.slice();held=armed=null;all.forEach((o,i)=>{o.removing=false;o.settling=false;o.el.style.display='';o.x=i*PITCH;o.vx=o.vy=o.vs=o.vr=o.vop=o.vsh=0;o.sh=0;o.s=1;o.op=1;o.y=0;o.r=0});syncOrder();toast.classList.remove('on');setState('idle')}
+all.forEach(o=>{
+o.el.addEventListener('pointerdown',e=>{if(e.button>0||armed||held||o.removing)return;
+activePointer=e.pointerId;o.el.focus({preventScroll:true});armed=o;px=lastpx=dX=e.clientX;py=dY=e.clientY;const dr=dock.getBoundingClientRect();gx=(px-dr.left)/dockScale-12-o.x-SZ/2;gy=(py-dr.top)/dockScale-12-SZ/2-o.y;
+try{o.el.setPointerCapture(e.pointerId)}catch(_){}setState('armed');holdT=setTimeout(()=>{if(armed&&!held)lift(armed,false)},130);e.preventDefault()});
+o.el.addEventListener('keydown',e=>{const k=e.key;
+if(held===o&&o.kb){if(k==='ArrowLeft'||k==='ArrowRight'){insertIdx=clamp(insertIdx+(k==='ArrowRight'?1:-1),0,order.length-1);rd();announce('Position '+(insertIdx+1)+' of '+order.length);e.preventDefault()}
+else if(k===' '||k==='Enter'){e.preventDefault();drop(o)}else if(k==='Escape'){cancel()}else if(k==='Delete'||k==='Backspace'){e.preventDefault();remove(o);const f=order[0];f&&f.el.focus()}}
+else if(!held){if(k===' '||k==='Enter'){e.preventDefault();lift(o,true)}else if(k==='ArrowRight'||k==='ArrowLeft'){const i=order.indexOf(o)+(k==='ArrowRight'?1:-1);order[i]&&order[i].el.focus()}}})});
+addEventListener('pointermove',e=>{if(activePointer!==null&&e.pointerId!==activePointer)return;px=e.clientX;py=e.clientY;hoverX=e.pointerType==='mouse'?px:null;if(armed&&!held&&Math.hypot(px-dX,py-dY)>6)lift(armed,false)});
+addEventListener('pointerup',e=>{if(e.pointerId!==activePointer)return;activePointer=null;clearTimeout(holdT);if(armed&&!held){const o=armed;armed=null;o.vy=reduce?0:-340;setState('idle')}
+else if(held&&!held.kb){const o=held;st==='intent'?remove(o):drop(o)}});
+addEventListener('pointercancel',e=>{if(e.pointerId===activePointer)cancel()});addEventListener('blur',cancel);
+addEventListener('keydown',e=>{if(e.key==='Escape')cancel();if(removed.length&&!held&&!armed&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo()}});
+dock.addEventListener('pointerleave',()=>{hoverX=null});
+$('#theme').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme!=='dark':!matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.dataset.theme=dark?'dark':'light';$('#theme').textContent=dark?'Light mode':'Dark mode';$('#theme').setAttribute('aria-pressed',String(dark))};if(matchMedia('(prefers-color-scheme:dark)').matches){$('#theme').textContent='Light mode';$('#theme').setAttribute('aria-pressed','true')}
+$('#slow').onchange=e=>{TS=e.target.checked?.25:1};$('#reset').onclick=reset;
+function frame(t){
+const rdt=Math.min(.033,(t-last)/1000||.016);last=t;const dt=rdt*TS;
+pvx+=(((px-lastpx)/rdt)-pvx)*.2;lastpx=px;if(!held&&!armed)pvx*=.8;
+const dr=dock.getBoundingClientRect(),sr=stage.getBoundingClientRect(),baseY=dr.top+(12+SZ/2)*dockScale,N=order.length;
+if(held&&!held.kb){const pos=((px-dr.left)/dockScale-gx-12-SZ/2)/PITCH;
+if(Math.abs(pos-insertIdx)>.62){insertIdx=clamp(Math.round(pos),0,N-1);rd()}
+if(st==='reorder'&&py<dr.top-52){setState('intent');haptic(4)}else if(st==='intent'&&py>dr.top-28){setState('reorder');haptic(4)}}
+const intent=!!held&&st==='intent',gap=held&&!intent?insertIdx:-1,others=held?order.filter(o=>o!==held):order,nL=intent?others.length:N;
+sp(dockS,'w',Math.max(nL,1)*PITCH-GAP,300,30,dt);dock.style.width=(dockS.w+24)+'px';
+const hov=!held&&!armed&&hoverX!=null&&py>dr.top-30&&py<dr.bottom+30;let tipTxt='',tipO=null,best=40;
+others.forEach((o,k)=>{const si=gap>=0&&k>=gap?k+1:k;sp(o,'x',si*PITCH,K,C,dt);
+let ts=1;if(o===armed)ts=.92;else if(hov){const d=Math.abs(hoverX-(dr.left+(12+o.x+SZ/2)*dockScale));ts=1+(reduce?0:.22)*Math.exp(-((d/72)*(d/72)));if(d<best){best=d;tipO=o;tipTxt=o.name}}
+sp(o,'s',ts,300,26,dt);sp(o,'y',-(ts-1)*30,300,26,dt);sp(o,'r',0,300,24,dt);sp(o,'sh',0,300,26,dt);sp(o,'op',1,300,30,dt)});
+if(held){const o=held;
+if(!o.kb){const nx=(px-dr.left)/dockScale-gx-12-SZ/2;o.x=nx;o.vx=pvx;let ty=(py-dr.top)/dockScale-gy-12-SZ/2;if(ty>0)ty*=.25;sp(o,'sh',1,600,36,dt);o.y=ty-6*o.sh;o.vy=0;sp(o,'r',reduce?0:clamp(pvx*.012,-10,10),260,22,dt)}
+else{sp(o,'x',insertIdx*PITCH,K,C,dt);sp(o,'sh',1,600,36,dt);sp(o,'y',-6,600,36,dt);sp(o,'r',0,260,22,dt)}
+sp(o,'s',intent?.82:1.14,600,36,dt);sp(o,'op',intent?.72:1,400,34,dt);
+if(intent){tipTxt='Release to remove';tipO=o}}
+removed.forEach(o=>{if(!o.removing)return;sp(o,'s',.3,300,28,dt);sp(o,'op',0,260,30,dt);sp(o,'y',-26,260,28,dt);if(o.op<.03)o.el.style.display='none'});
+if(gap>=0)sp(slotS,'x',gap*PITCH,K,C,dt);sp(slotS,'o',gap>=0?1:0,300,30,dt);
+slotEl.style.transform='translateX('+slotS.x+'px)';slotEl.style.opacity=clamp(slotS.o,0,1);
+all.forEach(o=>{if(o.settling&&o!==held&&!o.removing){const tx=order.indexOf(o)*PITCH;
+if(Math.abs(o.x-tx)<.4&&Math.abs(o.vx)<6&&Math.abs(o.vs)<.1&&Math.abs(o.vy)<8&&Math.abs(o.vr)<1&&Math.abs(o.y)<.5)o.settling=false}
+o.el.style.transform='translate3d('+o.x.toFixed(2)+'px,'+o.y.toFixed(2)+'px,0) scale('+Math.max(o.s,0).toFixed(3)+') rotate('+o.r.toFixed(2)+'deg)';
+o.el.style.opacity=clamp(o.op,0,1);o.el.style.zIndex=o===held?20:o.settling?10:1;
+const sh=clamp(o.sh,0,1.2);o.el.style.boxShadow=sh>.01?'0 '+(4+sh*14).toFixed(1)+'px '+(8+sh*22).toFixed(1)+'px rgba(0,0,0,'+(.1+.2*sh).toFixed(3)+')':'none'});
+if(!held&&!armed&&st!=='idle'){if(!(all.some(o=>o.settling)||removed.some(o=>o.removing&&o.op>.03)))setState('idle')}
+if(tipTxt&&tipO){const cx=dr.left+(12+tipO.x+SZ/2)*dockScale-sr.left,cy=baseY+(tipO.y-SZ/2*tipO.s)*dockScale-34-sr.top;
+if(tip.textContent!==tipTxt)tip.textContent=tipTxt;const w=tip.offsetWidth;tip.style.transform='translate('+(cx-w/2).toFixed(1)+'px,'+cy.toFixed(1)+'px)';tip.style.opacity=1}else tip.style.opacity=0;
+requestAnimationFrame(frame)}
+const ND=[['idle','Idle',60,95],['armed','Armed',190,95],['reorder','Reorder',330,42],['intent','Remove intent',330,148],['dropping','Dropping',470,42],['removing','Removing',470,148],['returning','Returning',585,95]];
+const ED=[['idle','armed','press',0],['armed','reorder','hold or move',0],['reorder','intent','up 52 px',1],['reorder','dropping','release',0],['intent','removing','release',0],['reorder','returning','Esc',0],['intent','returning','Esc',0]];
+const dg=$('#dg'),P=Object.fromEntries(ND.map(n=>[n[0],n]));let h='';
+ED.forEach(([a,b,l,two])=>{const A=P[a],B=P[b],dx=B[2]-A[2],dy=B[3]-A[3],s=Math.min(dx?46/Math.abs(dx):1e9,dy?14/Math.abs(dy):1e9)+.012;
+const x1=A[2]+dx*s,y1=A[3]+dy*s,x2=B[2]-dx*s,y2=B[3]-dy*s;
+h+='<line class="ed" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" marker-end="url(#ar)"'+(two?' marker-start="url(#ar)"':'')+'/><text class="lb" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-(Math.abs(dy)>40?0:6))+'">'+l+'</text>'});
+ND.forEach(([id,l,x,y])=>{h+='<g class="nd" id="n-'+id+'"><rect x="'+(x-46)+'" y="'+(y-14)+'" width="92" height="28" rx="8"/><text x="'+x+'" y="'+y+'">'+l+'</text></g>'});
+h+='<text class="lb" x="190" y="130">tap = launch hop</text>';
+['dropping','removing','returning'].forEach(id=>{const n=P[id];h+='<text class="lb" x="'+n[2]+'" y="'+(n[3]+(id==='returning'?30:-24))+'">then Idle</text>'});
+dg.insertAdjacentHTML('beforeend',h);syncOrder();setState('idle');requestAnimationFrame(frame);
+</script></body></html>

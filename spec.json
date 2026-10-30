@@ -1,0 +1,77 @@
+{
+  "name": "dock-pick-and-drop",
+  "version": "1.0.0",
+  "summary": "Pick-up, reorder, remove and drop interaction for an icon dock. The held icon is glued to the pointer; everything else is a spring.",
+  "states": {
+    "idle": "Nothing held. Hover magnification allowed (mouse only).",
+    "armed": "Pointer is down on an icon but not yet lifted. Icon scales to 0.92. Release here is a tap (launch hop).",
+    "reorder": "Icon is lifted and inside the dock zone. Neighbours part around a dashed landing slot.",
+    "intent": "Lifted icon is far enough above the dock to mean remove. Icon shrinks and fades, gap closes, label reads Release to remove.",
+    "dropping": "Released inside the dock. Order committed, icon springs into its slot carrying pointer velocity.",
+    "removing": "Released in intent. Icon scales and fades out, toast offers Undo.",
+    "returning": "Cancelled (Esc, blur, pointercancel). Order untouched, icon springs back to its original slot."
+  },
+  "transitions": [
+    {"from": "idle", "to": "armed", "trigger": "pointerdown on icon", "guard": "no other active pointer, primary button"},
+    {"from": "armed", "to": "reorder", "trigger": "130 ms hold OR 6 px movement", "effects": ["haptic 10 ms", "record origin index", "compute grab offset"]},
+    {"from": "armed", "to": "idle", "trigger": "pointerup before lift", "effects": ["launch hop impulse on y"]},
+    {"from": "reorder", "to": "intent", "trigger": "pointer more than 52 px above dock top", "effects": ["haptic 4 ms"]},
+    {"from": "intent", "to": "reorder", "trigger": "pointer less than 28 px above dock top", "effects": ["haptic 4 ms"]},
+    {"from": "reorder", "to": "dropping", "trigger": "pointerup or Space", "effects": ["commit order at insertIdx"]},
+    {"from": "intent", "to": "removing", "trigger": "pointerup or Delete", "effects": ["remove from order", "show undo toast 4 s"]},
+    {"from": "reorder", "to": "returning", "trigger": "Esc, blur, pointercancel"},
+    {"from": "intent", "to": "returning", "trigger": "Esc, blur, pointercancel"},
+    {"from": "dropping", "to": "idle", "trigger": "all springs at rest"},
+    {"from": "removing", "to": "idle", "trigger": "removed icon opacity below 0.03"},
+    {"from": "returning", "to": "idle", "trigger": "all springs at rest"}
+  ],
+  "tokens": {
+    "slot_pitch_px": 64, "icon_px": 52, "gap_px": 12,
+    "hold_ms": 130, "move_threshold_px": 6,
+    "press_scale": 0.92, "lift_scale": 1.14, "lift_rise_px": 6,
+    "spring_press": [300, 26], "spring_lift": [600, 36], "spring_settle": [520, 34], "spring_dock_width": [300, 30],
+    "tilt_deg_per_px_per_s": 0.012, "tilt_max_deg": 10,
+    "reorder_hysteresis_slots": 0.62,
+    "intent_enter_px": 52, "intent_exit_px": 28, "intent_scale": 0.82, "intent_opacity": 0.72,
+    "rubber_band_down": 0.25, "hover_magnify_max": 0.22,
+    "undo_window_ms": 4000, "max_sim_dt_ms": 33, "spring_substep_ms": 8
+  },
+  "invariants": [
+    "I1 Single pointer: ignore a second pointerdown while one is armed or held.",
+    "I2 Glue: the held icon's position is assigned from the pointer every frame. Never animate it with a spring or CSS transition.",
+    "I3 Deferred commit: the order array only changes on drop or remove. During a drag only insertIdx changes, so cancel is free.",
+    "I4 Pure layout: every non-held icon's target slot is a pure function of (order, held, insertIdx, intent). No hidden layout state.",
+    "I5 Terminates: every state reaches idle. Decide idle from a rest test on springs, and add a watchdog (force idle after 1500 ms) as a last resort.",
+    "I6 Momentum: on release, copy pointer velocity into the icon's spring velocity so the settle continues the gesture.",
+    "I7 Hysteresis: swap slots only after the icon centre passes 0.62 of a slot, so boundaries never flicker. Intent has separate enter and exit thresholds.",
+    "I8 Stable integration: step springs in substeps of at most 8 ms and clamp frame dt to 33 ms, so a background tab or a long frame cannot explode the simulation.",
+    "I9 Centre-based hit testing: resolve the target slot from the dragged icon's centre, not its edges, and measure the dock rect each frame because its width animates.",
+    "I10 Undo restores the original index, clamped to the current length.",
+    "I11 Reduced motion: replace springs with near-instant ones and disable tilt and magnify. State logic stays identical.",
+    "I12 Keyboard parity: Space picks up, arrows move, Space drops, Esc cancels, Delete removes, Ctrl/Cmd+Z undoes. Every step is announced in an aria-live region."
+  ],
+  "gotchas": [
+    "A unary minus directly before ** is a SyntaxError in JavaScript (for example -(d/72)**2). Write -((d/72)*(d/72)). One such line silently blanked the whole page.",
+    "Set touch-action: none on icons or the browser will scroll and fire pointercancel mid-drag.",
+    "Wrap setPointerCapture in try/catch. It throws if the pointer is already gone.",
+    "Do not put CSS transitions on transform for icons that JS also drives. They fight, and the icon feels laggy.",
+    "getBoundingClientRect includes scale. Compute the grab offset from the unscaled slot position, not the rect of a scaled icon.",
+    "Raise z-index while an icon is held and while it is still settling, otherwise it slides under its neighbours on drop.",
+    "Cancel on window blur and pointercancel, or an icon can stay lifted forever.",
+    "jsdom has no matchMedia. Stub it when smoke-testing so the script reaches the end."
+  ],
+  "test_scenarios": [
+    {"name": "tap", "steps": "pointerdown, pointerup within 100 ms and under 6 px", "expect": "state idle, order unchanged, hop played"},
+    {"name": "reorder right", "steps": "hold icon 0, drag past 1.3 slots, release", "expect": "icon now index 1, neighbours moved, state returns to idle"},
+    {"name": "boundary jitter", "steps": "hover pointer at 0.6 to 0.64 slots repeatedly", "expect": "no slot flicker (insertIdx changes at most once)"},
+    {"name": "remove", "steps": "lift, drag 60 px above dock, release", "expect": "icon removed, toast visible, dock narrower by one slot"},
+    {"name": "undo", "steps": "remove, then Ctrl/Cmd+Z within 4 s", "expect": "icon back at original index"},
+    {"name": "cancel", "steps": "lift, drag, press Esc", "expect": "icon returns to original slot, order unchanged"},
+    {"name": "pointercancel", "steps": "lift, dispatch pointercancel", "expect": "same as cancel"},
+    {"name": "second pointer", "steps": "lift with pointer A, pointerdown with pointer B", "expect": "B ignored"},
+    {"name": "regrab mid settle", "steps": "drop, immediately grab the same icon", "expect": "no jump, velocity continuous"},
+    {"name": "keyboard", "steps": "focus icon, Space, ArrowRight twice, Space", "expect": "moved two slots, announcements read, state idle"},
+    {"name": "reduced motion", "steps": "enable prefers-reduced-motion, repeat reorder", "expect": "same end state, no visible overshoot"},
+    {"name": "single icon", "steps": "only one icon in dock", "expect": "lift and drop work, no NaN positions"}
+  ]
+}
