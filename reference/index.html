@@ -52,6 +52,7 @@ nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margi
 <div id="toast"></div></div>
 <div id="rd" aria-hidden="true"></div><div class="sr" id="live" aria-live="polite"></div>
 
+<section aria-labelledby="get-dock" style="margin-top:28px"><h2 id="get-dock" style="margin-top:0">Want this in your project?</h2><p class="mut">Give this repo link to your AI assistant. The implementation guide, motion spec, reference code, and optional MCP server explain how to build it.</p><p><a href="https://github.com/rishabharora-kk/docK">github.com/rishabharora-kk/docK</a></p><button class="t" id="copy-prompt">Copy prompt for your AI</button><p id="copy-status" role="status" style="font-size:13px;margin-top:8px"></p></section>
 <details><summary>Explore the interaction design <span>States, motion tokens & edge cases</span></summary>
 <h2>State machine</h2>
 <p class="mut">Seven states, one active at a time. Every path ends in Idle, so the dock can never get stuck.</p>
@@ -92,6 +93,7 @@ nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margi
 </details><footer>Built for curious hands. <a href="https://github.com/rishabharora-kk/docK">View source on GitHub ↗</a></footer>
 </main>
 <script>
+document.querySelector('#copy-prompt').onclick=async()=>{const prompt="Add this dock interaction to my project: https://github.com/rishabharora-kk/docK\nRead IMPLEMENTATION.md, spec.json, and index.html. Adapt it to my stack and design, preserve pointer and keyboard behaviour, and verify the interaction scenarios. Use my app's icons and actions.";try{await navigator.clipboard.writeText(prompt);document.querySelector('#copy-status').textContent='Copied. Paste it into your AI coding assistant.'}catch{document.querySelector('#copy-status').textContent=prompt}};
 const $=s=>document.querySelector(s),PITCH=64,SZ=52,GAP=12;
 const stage=$('#stage'),dock=$('#dock'),tip=$('#tip'),live=$('#live'),toast=$('#toast'),slotEl=$('#slot');
 const G=['<path d="M5 6h14v9H10l-4 3v-3H5z"/>','<path d="M7 4h7l3 3v13H7zM14 4v3h3M9.5 12h5M9.5 15h5"/>','<path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/>','<circle cx="11" cy="11" r="5"/><path d="M15 15l4 4"/>','<path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h3"/>','<circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.3 6.3l2.1 2.1M15.6 15.6l2.1 2.1M17.7 6.3l-2.1 2.1M8.4 15.6l-2.1 2.1"/>'];
