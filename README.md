@@ -38,4 +38,4 @@ To run the optional MCP server: `python -m pip install -r requirements.txt`, the
 
 ## Hosting
 
-The demo is served by GitHub Pages from `main` at the repository root. Changes to `index.html` publish through GitHub's Pages build. The README preview links straight to that demo.
+Enable GitHub Pages once in [Settings → Pages](https://github.com/rishabharora-kk/docK/settings/pages): choose **Deploy from a branch**, **main**, **/ (root)**, then **Save**. The connected integration cannot enable Pages (GitHub returned HTTP 403). Until this is enabled, the demo link above will not resolve. Once enabled, changes to `index.html` publish through GitHub's Pages build.
